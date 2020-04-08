@@ -28,12 +28,18 @@ optimizer = optim.Adam([img2], lr=0.01)
 
 while ssim_value < 0.95:
     optimizer.zero_grad()
-    ssim_out = -ssim_loss(img1, img2)
+    mask = torch.Tensor(np.ones((img1.shape[0],img1.shape[2],img1.shape[3])))
+    mask[0,:,0:img1.shape[3]//2]=0
+    ssim_out = -ssim_loss(img1, img2,mask)
     ssim_value = - ssim_out.data.item()
     print(ssim_value)
     ssim_out.backward()
     optimizer.step()
-
+    ssim_map = pytorch_ssim.ssim_map(img1,img2)
     img_show = img2.detach().numpy().squeeze().transpose(1,2,0)
+    img_ssim = ssim_map.detach().numpy().squeeze().transpose(1,2,0)
     cv2.imshow('img',img_show)
-    cv2.waitKey()
+    cv2.imshow('ssim',img_ssim)
+    key = cv2.waitKey()
+    if key&255==ord('q'):
+        break
